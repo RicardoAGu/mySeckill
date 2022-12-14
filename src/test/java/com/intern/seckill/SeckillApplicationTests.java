@@ -1,4 +1,4 @@
-package com.example.seckill;
+package com.intern.seckill;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
