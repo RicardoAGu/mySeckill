@@ -24,7 +24,7 @@ public class DemoController {
      */
     @RequestMapping("/hello")
     public String hello(Model model) {
-        model.addAttribute("name", "顾傲广");
+        model.addAttribute("name", "Ricardo.A.Gu");
         return "hello";
     }
 }

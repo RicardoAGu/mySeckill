@@ -6,9 +6,9 @@ spring:
   # 数据源配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc::mysql://localhost:3306/seckill?useUnicode=true&characterEncoding=UTF-8&ServerTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/seckill?useUnicode=true&characterEncoding=UTF-8&ServerTimezone=Asia/Shanghai
     username: root
-    password: root
+    password: 056981_Gu
     hikari:
       # 连接池名
       pool-name: DataHikariCP

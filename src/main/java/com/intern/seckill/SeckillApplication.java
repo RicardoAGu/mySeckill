@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @SpringBootApplication
-@MapperScan("com.intern.seckill.pojo")
+@MapperScan("com.intern.seckill.mapper")
 public class SeckillApplication {
 
     public static void main(String[] args) {
