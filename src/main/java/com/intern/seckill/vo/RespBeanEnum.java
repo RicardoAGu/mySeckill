@@ -19,7 +19,8 @@ public enum RespBeanEnum {
     // 登录模块专用的枚举
     LOGIN_ERROR(500210, "用户名或密码错误"),
     MOBILE_ERROR(500211, "手机号码格式错误"),
-    BIND_ERROR(500212, "参数校验异常");
+    BIND_ERROR(500212, "参数校验异常"),
+    DOMAIN_ERROR(500213, "域解析错误");
 
     private final Integer code;
     private final String message;

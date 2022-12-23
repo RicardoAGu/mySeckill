@@ -5,6 +5,9 @@ import com.intern.seckill.pojo.User;
 import com.intern.seckill.vo.LoginVo;
 import com.intern.seckill.vo.RespBean;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * <p>
  *  服务类
@@ -19,5 +22,12 @@ public interface IUserService extends IService<User> {
      * @author Ricardo.A.Gu
      * @since 1.0.0
      */
-    RespBean doLogin(LoginVo loginVo);
+    RespBean doLogin(LoginVo loginVo, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse);
+
+    /**
+     * 根据cookie获取用户
+     * @author Ricardo.A.Gu
+     * @since 1.0.0
+     */
+    User getUserByCookie(String userTicket, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse);
 }

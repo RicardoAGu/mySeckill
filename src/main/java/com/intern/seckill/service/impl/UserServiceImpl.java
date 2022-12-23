@@ -5,18 +5,18 @@ import com.intern.seckill.exception.GlobalException;
 import com.intern.seckill.mapper.UserMapper;
 import com.intern.seckill.pojo.User;
 import com.intern.seckill.service.IUserService;
+import com.intern.seckill.utils.CookieUtil;
 import com.intern.seckill.utils.MD5Util;
-import com.intern.seckill.utils.PhoneNumberValidator;
+import com.intern.seckill.utils.UUIDUtil;
 import com.intern.seckill.vo.LoginVo;
 import com.intern.seckill.vo.RespBean;
 import com.intern.seckill.vo.RespBeanEnum;
-import org.apache.ibatis.annotations.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.util.StringUtils;
 
-import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * <p>
@@ -31,6 +31,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 登录
@@ -38,7 +40,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @since 1.0.0
      */
     @Override
-    public RespBean doLogin(LoginVo loginVo) {
+    public RespBean doLogin(LoginVo loginVo, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         String mobile = loginVo.getMobile();
         String password = loginVo.getPassword();
         // 参数校验
@@ -49,6 +51,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (user == null) throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
         // 判断密码是否正确
         if (!MD5Util.fromPassToDBPass(password, user.getSalt()).equals(user.getPassword())) throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
+        // 登录成功，生成cookie，把cookie和用户对象存到session中去。
+        String ticket = UUIDUtil.uuid();
+        // httpServletRequest.getSession().setAttribute(ticket, user);
+        // 将用户信息存入redis中
+        redisTemplate.opsForValue().set("user:" + ticket, user);
+        CookieUtil.setCookie(httpServletRequest, httpServletResponse, "UserTicket", ticket);
         return RespBean.success();
+    }
+
+    /**
+     * 根据cookie获取用户
+     * @author Ricardo.A.Gu
+     * @since 1.0.0
+     */
+    @Override
+    public User getUserByCookie(String userTicket, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        if (userTicket == null) return null;
+        User user = (User) redisTemplate.opsForValue().get("user:" + userTicket);
+        // cookie有时效的，以防万一cookie失效，当我们获取到用户时再为它设定一次cookie
+        if (user != null) {
+            CookieUtil.setCookie(httpServletRequest, httpServletResponse, "UserTicket", userTicket);
+        }
+        return user;
     }
 }

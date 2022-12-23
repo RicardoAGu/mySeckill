@@ -27,6 +27,27 @@ spring:
       # 心跳机制，测试连接是否可用的查询语句
       connection-test-query: SELECT 1
 
+  # redis配置
+  redis:
+    # 服务器地址（虚拟机的ip地址）
+    host: 192.168.209.129
+    # 端口
+    port: 6379
+    # 数据库编号，默认是0
+    database: 0
+    # 超时时间
+    timeout: 10000ms
+    lettuce:
+      pool:
+        # 最大连接数，默认为8
+        max-active: 8
+        # 最大连接默认等待时间，默认-1，即一直等下去
+        max-wait: 10000ms
+        # 最大空闲连接数，默认为8
+        max-idle: 200
+        # 最小空闲连接数，默认为0
+        min-idle: 5
+
 
 # MyBatisPlus配置
 mybatis-plus:
