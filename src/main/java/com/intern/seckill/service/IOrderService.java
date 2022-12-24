@@ -2,6 +2,8 @@ package com.intern.seckill.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.intern.seckill.pojo.Order;
+import com.intern.seckill.pojo.User;
+import com.intern.seckill.vo.GoodsVo;
 
 /**
  * <p>
@@ -13,4 +15,10 @@ import com.intern.seckill.pojo.Order;
  */
 public interface IOrderService extends IService<Order> {
 
+    /**
+     * 秒杀功能的实现
+     * @author Ricardo.A.Gu
+     * @since 1.0.0
+     */
+    Order seckill(User user, GoodsVo goodsVo);
 }

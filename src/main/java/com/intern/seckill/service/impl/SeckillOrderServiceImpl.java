@@ -1,6 +1,8 @@
 package com.intern.seckill.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.intern.seckill.mapper.SeckillOrderMapper;
+import com.intern.seckill.pojo.SeckillOrder;
 import com.intern.seckill.service.ISeckillOrderService;
 import org.springframework.stereotype.Service;
 
