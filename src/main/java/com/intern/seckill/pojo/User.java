@@ -44,12 +44,12 @@ public class User implements Serializable {
     /**
      * 注册时间
      */
-    private Date registerData;
+    private Date registerDate;
 
     /**
      * 最后一次登录时间
      */
-    private Date lastLoginData;
+    private Date lastLoginDate;
 
     /**
      * 登录次数

@@ -32,6 +32,9 @@ public class SeckillController {
 
     /**
      * 秒杀功能实现
+     * windows优化前QPS：3019.3
+     * linux优化前QPS：511.7
+     *
      * @author Ricardo.A.Gu
      * @since 1.0.0
      */

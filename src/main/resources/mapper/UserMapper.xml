@@ -9,14 +9,14 @@
         <result column="password" property="password" />
         <result column="salt" property="salt" />
         <result column="head" property="head" />
-        <result column="register_data" property="registerData" />
-        <result column="last_login_data" property="lastLoginData" />
+        <result column="register_date" property="registerData" />
+        <result column="last_login_date" property="lastLoginData" />
         <result column="login_count" property="loginCount" />
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, nickname, password, salt, head, register_data, last_login_data, login_count
+        id, nickname, password, salt, head, register_date, last_login_date, login_count
     </sql>
 
 </mapper>

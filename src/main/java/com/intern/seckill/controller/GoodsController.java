@@ -28,6 +28,9 @@ public class GoodsController {
 
     /**
      * 跳转商品页面
+     * windows优化前QPS：3110.4
+     * linux优化前QPS：402
+     *
      * @author Ricardo.A.Gu
      * @since 1.0.0
      */
