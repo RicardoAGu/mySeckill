@@ -7,6 +7,7 @@ import com.intern.seckill.service.IOrderService;
 import com.intern.seckill.service.ISeckillOrderService;
 import com.intern.seckill.vo.RespBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import com.intern.seckill.pojo.User;
@@ -32,6 +33,9 @@ public class SeckillController {
     private ISeckillOrderService seckillOrderService;
     @Autowired
     private IOrderService orderService;
+    @Autowired
+    private RedisTemplate redisTemplate;
+
 
     /**
      * 秒杀功能实现
@@ -80,7 +84,8 @@ public class SeckillController {
             return RespBean.error(RespBeanEnum.EMPTY_STOCK);
         }
         // 判断同一用户是否对同一商品多次下单
-        SeckillOrder seckillOrder = seckillOrderService.getOne(new QueryWrapper<SeckillOrder>().eq("user_id", user.getId()).eq("goods_id", goodsId));
+        // SeckillOrder seckillOrder = seckillOrderService.getOne(new QueryWrapper<SeckillOrder>().eq("user_id", user.getId()).eq("goods_id", goodsId));
+        SeckillOrder seckillOrder = (SeckillOrder) redisTemplate.opsForValue().get("order:" + user.getId() + ":" + goodsId);
         if (seckillOrder != null) {
             model.addAttribute("errmsg", RespBeanEnum.REPEAT_ERROR.getMessage());
             return RespBean.error(RespBeanEnum.REPEAT_ERROR);
