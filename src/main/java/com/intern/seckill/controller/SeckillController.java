@@ -28,10 +28,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 秒杀功能实现
@@ -112,11 +109,16 @@ public class SeckillController implements InitializingBean {
         }
         // 预减库存
         // Long stock =  valueOperations.decrement("seckillGoods:" + goodsId);
-        Long stock = (Long) redisTemplate.execute(redisScript, Collections.singletonList("seckillGoods:" + goodsId), Collections.EMPTY_LIST);
-        if (stock < 0) {
+        List<String> KEYS = new ArrayList<>();
+        KEYS.add("seckillGoods:" + goodsId);
+        KEYS.add(user.getId() + ":" + goodsId);
+        Long stock = (Long) redisTemplate.execute(redisScript, KEYS, Collections.EMPTY_LIST);
+        if (stock == -1) {
             emptyStockMap.put(goodsId, true);
             //valueOperations.increment("seckillGoods:" + goodsId);
             return RespBean.error(RespBeanEnum.EMPTY_STOCK);
+        } else if (stock == -2) {
+            return RespBean.error(RespBeanEnum.REPEAT_ERROR);
         }
         SeckillMessage seckillMessage = new SeckillMessage(user, goodsId);
         mqSender.sendSeckillMessage(JsonUtil.object2JsonStr(seckillMessage));
