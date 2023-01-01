@@ -18,6 +18,7 @@ import com.intern.seckill.vo.OrderDetailVo;
 import com.intern.seckill.vo.RespBeanEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,10 +54,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional
     public Order seckill(User user, GoodsVo goodsVo){
+        ValueOperations valueOperations = redisTemplate.opsForValue();
+        // 秒杀商品表减库存
         SeckillGoods seckillGoods = seckillGoodsService.getOne(new QueryWrapper<SeckillGoods>().eq("goods_id", goodsVo.getId()));
         seckillGoods.setStockCount(seckillGoods.getStockCount() - 1);
         boolean seckillResult = seckillGoodsService.update(new UpdateWrapper<SeckillGoods>().
                 setSql("stock_count = " + "stock_count - 1").eq("goods_id", goodsVo.getId()).gt("stock_count", 0));
+        if (seckillGoods.getStockCount() < 1) valueOperations.set("isEmptyStock:" + goodsVo.getId(), "0");
         if (!seckillResult) {
             return null;
         }

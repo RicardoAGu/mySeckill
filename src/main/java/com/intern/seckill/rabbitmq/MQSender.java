@@ -17,29 +17,39 @@ public class MQSender {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    public void send(Object msg) {
+//    public void send(Object msg) {
+//        log.info("发送消息：" + msg);
+//        rabbitTemplate.convertAndSend("fanoutExchange", "", msg);
+//    }
+//
+//    public void send01(Object msg) {
+//        log.info("发送red消息：" + msg);
+//        rabbitTemplate.convertAndSend("directExchange", "queue.red", msg);
+//    }
+//
+//    public void send02(Object msg) {
+//        log.info("发送green消息：" + msg);
+//        rabbitTemplate.convertAndSend("directExchange", "queue.green", msg);
+//    }
+//
+//    public void send03(Object msg) {
+//        log.info("发送消息(QUEUE01接收)：" + msg);
+//        rabbitTemplate.convertAndSend("topicExchange", "queue.red.message", msg);
+//    }
+//
+//    public void send04(Object msg) {
+//        log.info("发送消息(两个QUEUE接收)：" + msg);
+//        rabbitTemplate.convertAndSend("topicExchange", "message.queue.green", msg);
+//    }
+
+    /**
+     * 发送秒杀信息
+     * @author Ricardo.A.Gu
+     * @since 1.0.0
+     */
+    public void sendSeckillMessage(String msg) {
         log.info("发送消息：" + msg);
-        rabbitTemplate.convertAndSend("fanoutExchange", "", msg);
-    }
-
-    public void send01(Object msg) {
-        log.info("发送red消息：" + msg);
-        rabbitTemplate.convertAndSend("directExchange", "queue.red", msg);
-    }
-
-    public void send02(Object msg) {
-        log.info("发送green消息：" + msg);
-        rabbitTemplate.convertAndSend("directExchange", "queue.green", msg);
-    }
-
-    public void send03(Object msg) {
-        log.info("发送消息(QUEUE01接收)：" + msg);
-        rabbitTemplate.convertAndSend("topicExchange", "queue.red.message", msg);
-    }
-
-    public void send04(Object msg) {
-        log.info("发送消息(两个QUEUE接收)：" + msg);
-        rabbitTemplate.convertAndSend("topicExchange", "message.queue.green", msg);
+        rabbitTemplate.convertAndSend("seckillExchange", "seckill.message", msg);
     }
 
 }

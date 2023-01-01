@@ -134,8 +134,8 @@
             success:function (data) {
                 if(data.code == 200){
                     layer.msg("恭喜您秒杀成功");
-                    window.location.href="/orderDetail.htm?orderId=" + data.obj.id;
-                    // getResult($("#goodsId").val());
+                    // window.location.href="/orderDetail.htm?orderId=" + data.obj.id;
+                    getResult($("#goodsId").val());
                 }else{
                     layer.msg(data.message);
                     refreshCaptcha();
@@ -151,7 +151,7 @@
     function getResult(goodsId) {
         g_showLoading();
         $.ajax({
-            url: "/secKill/result",
+            url: "/seckill/result",
             type: "GET",
             data: {
                 goodsId: goodsId
