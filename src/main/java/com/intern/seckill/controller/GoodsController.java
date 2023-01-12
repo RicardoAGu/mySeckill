@@ -69,46 +69,46 @@ public class GoodsController {
         return html;
     }
 
-    /**
-     * 跳转商品详情页面
-     * @author Ricardo.A.Gu
-     * @since 1.0.0
-     */
-    @RequestMapping(value = "/toDetail/{goodsId}", produces = "text/html;charset=utf-8")
-    @ResponseBody
-    public String toDetail2(@PathVariable Long goodsId, Model model, User user, HttpServletRequest request, HttpServletResponse response) {
-        // 从redis中获取页面，如果不为空，直接返回页面。
-        ValueOperations valueOperations = redisTemplate.opsForValue();
-        String html = (String) valueOperations.get("goodsDetail:" + goodsId);
-        if (!StringUtils.isEmpty(html)) return html;
-        // 如果为空，则手动渲染页面，存入redis中再返回。
-
-        model.addAttribute("user", user);
-        GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
-        Date startDate = goodsVo.getStartDate();
-        Date endDate = goodsVo.getEndDate();
-        Date nowDate = new Date();
-        // 秒杀状态参数，0为未开始，1为进行中，2为已结束
-        int secKillStatus = 0;
-        // 距离秒杀开始还剩多少时间，0为已开始，-1为已结束
-        int remainSeconds = 0;
-        if (nowDate.after(endDate)) {
-            secKillStatus = 2;
-            remainSeconds = -1;
-        }
-        else if (nowDate.after(startDate)) secKillStatus = 1;
-        else remainSeconds = (int) ((startDate.getTime() - nowDate.getTime()) / 1000);
-        model.addAttribute("goods", goodsVo);
-        model.addAttribute("secKillStatus", secKillStatus);
-        model.addAttribute("remainSeconds", remainSeconds);
-        // 手动渲染页面
-        WebContext webContext = new WebContext(request, response, request.getServletContext(), request.getLocale(), model.asMap());
-        html = thymeleafViewResolver.getTemplateEngine().process("goodsDetail", webContext);
-        if (!StringUtils.isEmpty(html)) {
-            valueOperations.set("goodsDetail:" + goodsId, html, 60, TimeUnit.SECONDS);
-        }
-        return html;
-    }
+//    /**
+//     * 跳转商品详情页面
+//     * @author Ricardo.A.Gu
+//     * @since 1.0.0
+//     */
+//    @RequestMapping(value = "/toDetail/{goodsId}", produces = "text/html;charset=utf-8")
+//    @ResponseBody
+//    public String toDetail2(@PathVariable Long goodsId, Model model, User user, HttpServletRequest request, HttpServletResponse response) {
+//        // 从redis中获取页面，如果不为空，直接返回页面。
+//        ValueOperations valueOperations = redisTemplate.opsForValue();
+//        String html = (String) valueOperations.get("goodsDetail:" + goodsId);
+//        if (!StringUtils.isEmpty(html)) return html;
+//        // 如果为空，则手动渲染页面，存入redis中再返回。
+//
+//        model.addAttribute("user", user);
+//        GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
+//        Date startDate = goodsVo.getStartDate();
+//        Date endDate = goodsVo.getEndDate();
+//        Date nowDate = new Date();
+//        // 秒杀状态参数，0为未开始，1为进行中，2为已结束
+//        int secKillStatus = 0;
+//        // 距离秒杀开始还剩多少时间，0为已开始，-1为已结束
+//        int remainSeconds = 0;
+//        if (nowDate.after(endDate)) {
+//            secKillStatus = 2;
+//            remainSeconds = -1;
+//        }
+//        else if (nowDate.after(startDate)) secKillStatus = 1;
+//        else remainSeconds = (int) ((startDate.getTime() - nowDate.getTime()) / 1000);
+//        model.addAttribute("goods", goodsVo);
+//        model.addAttribute("secKillStatus", secKillStatus);
+//        model.addAttribute("remainSeconds", remainSeconds);
+//        // 手动渲染页面
+//        WebContext webContext = new WebContext(request, response, request.getServletContext(), request.getLocale(), model.asMap());
+//        html = thymeleafViewResolver.getTemplateEngine().process("goodsDetail", webContext);
+//        if (!StringUtils.isEmpty(html)) {
+//            valueOperations.set("goodsDetail:" + goodsId, html, 60, TimeUnit.SECONDS);
+//        }
+//        return html;
+//    }
 
     /**
      * 跳转商品详情页面

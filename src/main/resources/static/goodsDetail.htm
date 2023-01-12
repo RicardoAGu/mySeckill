@@ -39,9 +39,9 @@
             <td>
                 <div class="row">
                     <div class="form-inline">
-<!--                        <img id="captchaImg" width="130" height="32" onclick="refreshCaptcha()" style="display: none"/>-->
-<!--                        <input id="captcha" class="form-control" style="display: none">-->
-                        <button class="btn btn-primary" type="button" id="buyButton" onclick="doSeckill()">
+                        <img id="captchaImg" width="130" height="32" onclick="refreshCaptcha()" style="display: none"/>
+                        <input id="captcha" class="form-control" style="display: none">
+                        <button class="btn btn-primary" type="button" id="buyButton" onclick="getSecKillPath()">
                             立即秒杀
                             <input type="hidden" name="goodsId" id="goodsId">
                         </button>
@@ -72,22 +72,22 @@
     function refreshCaptcha(){
         var goodsId = $("#goodsId").val();
         // 加上时间戳双重保险每次都刷到新的验证码
-        $("#captchaImg").attr("src", "/secKill/captcha?goodsId=" + goodsId + "&time=" + new Date())
+        $("#captchaImg").attr("src", "/seckill/captcha?goodsId=" + goodsId + "&time=" + new Date())
     }
 
     function getSecKillPath() {
-        var verifyCode = $("#captcha").val();
-        if(verifyCode == ''){
+        var captcha = $("#captcha").val();
+        if(captcha == ''){
             layer.msg("请输入验证码后再尝试");
         }else{
             var goodsId = $("#goodsId").val();
             g_showLoading();
             $.ajax({
-                url:"/secKill/path",
+                url:"/seckill/path",
                 method:"get",
                 data:{
                     goodsId:goodsId,
-                    verifyCode:verifyCode
+                    captcha:captcha
                 },
                 success:function (data) {
                     if(data.code == 200){
@@ -124,9 +124,9 @@
         })
     }
     
-    function doSeckill() {
+    function doSeckill(path) {
         $.ajax({
-            url: '/seckill/doSeckill',
+            url: '/seckill/'+ path +'/doSeckill',
             type: 'POST',
             data:{
                 goodsId:$("#goodsId").val(),

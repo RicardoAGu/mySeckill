@@ -13,6 +13,8 @@ import com.intern.seckill.service.IGoodsService;
 import com.intern.seckill.service.IOrderService;
 import com.intern.seckill.service.ISeckillGoodsService;
 import com.intern.seckill.service.ISeckillOrderService;
+import com.intern.seckill.utils.MD5Util;
+import com.intern.seckill.utils.UUIDUtil;
 import com.intern.seckill.vo.GoodsVo;
 import com.intern.seckill.vo.OrderDetailVo;
 import com.intern.seckill.vo.RespBeanEnum;
@@ -21,8 +23,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -100,6 +104,40 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orderDetailVo.setOrder(order);
         orderDetailVo.setGoodsVo(goodsVo);
         return orderDetailVo;
+    }
+
+    /**
+     * 根据用户与商品创建秒杀接口路径
+     * @author Ricardo.A.Gu
+     * @since 1.0.0
+     */
+    @Override
+    public String createPath(User user, Long goodsId) {
+        String path = MD5Util.md5(UUIDUtil.uuid()+"123456");
+        redisTemplate.opsForValue().set("seckillPath:" + user.getId() + ":" + goodsId, path, 60, TimeUnit.SECONDS);
+        return path;
+    }
+
+    /**
+     * 校验验证码是否输入正确
+     * @author Ricardo.A.Gu
+     * @since 1.0.0
+     */
+    @Override
+    public boolean checkCaptcha(User user, Long goodsId, String captcha) {
+        if (user == null || goodsId < 0 || captcha == null) return false;
+        return captcha.equals(redisTemplate.opsForValue().get("captcha:" + user.getId() + ":" + goodsId));
+    }
+
+    /**
+     * 校验秒杀路径是否正确
+     * @author Ricardo.A.Gu
+     * @since 1.0.0
+     */
+    @Override
+    public boolean checkPath(User user, Long goodsId, String path) {
+        if (user == null || goodsId < 0 || StringUtils.isEmpty(path)) return false;
+        return path.equals(redisTemplate.opsForValue().get("seckillPath:" + user.getId() + ":" + goodsId));
     }
 
 }

@@ -10,6 +10,8 @@ import com.intern.seckill.service.IOrderService;
 import com.intern.seckill.service.ISeckillOrderService;
 import com.intern.seckill.utils.JsonUtil;
 import com.intern.seckill.vo.RespBean;
+import com.wf.captcha.ArithmeticCaptcha;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -19,6 +21,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import com.intern.seckill.pojo.User;
 import com.intern.seckill.pojo.Order;
@@ -28,13 +31,17 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 秒杀功能实现
  * @author Ricardo.A.Gu
  * @since 1.0.0
  */
+@Slf4j
 @Controller
 @RequestMapping("/seckill")
 public class SeckillController implements InitializingBean {
@@ -94,24 +101,24 @@ public class SeckillController implements InitializingBean {
      * @author Ricardo.A.Gu
      * @since 1.0.0
      */
-    @RequestMapping(value = "/doSeckill", method = RequestMethod.POST)
+    @RequestMapping(value = "/{path}/doSeckill", method = RequestMethod.POST)
     @ResponseBody
-    public RespBean doSeckill(Model model, User user, Long goodsId) {
+    public RespBean doSeckill(@PathVariable String path, User user, Long goodsId) {
         if (user == null) return RespBean.error(RespBeanEnum.SESSION_ERROR);
+        boolean check = orderService.checkPath(user, goodsId, path);
+        if (!check) {
+            return RespBean.error(RespBeanEnum.REQUEST_ILLEGAL);
+        }
         // 内存标记，减少对redis的访问
         if (emptyStockMap.get(goodsId)) return RespBean.error(RespBeanEnum.EMPTY_STOCK);
-        ValueOperations valueOperations = redisTemplate.opsForValue();
         // 判断同一用户是否对同一商品多次下单
         SeckillOrder seckillOrder = (SeckillOrder) redisTemplate.opsForValue().get("order:" + user.getId() + ":" + goodsId);
-        if (seckillOrder != null) {
-            model.addAttribute("errmsg", RespBeanEnum.REPEAT_ERROR.getMessage());
-            return RespBean.error(RespBeanEnum.REPEAT_ERROR);
-        }
+        if (seckillOrder != null) return RespBean.error(RespBeanEnum.REPEAT_ERROR);
         // 预减库存
         // Long stock =  valueOperations.decrement("seckillGoods:" + goodsId);
         List<String> KEYS = new ArrayList<>();
-        KEYS.add("seckillGoods:" + goodsId);
-        KEYS.add(user.getId() + ":" + goodsId);
+        KEYS.add("seckillGoodsStock:" + goodsId);
+        KEYS.add("operationStatus:" + user.getId() + ":" + goodsId);
         Long stock = (Long) redisTemplate.execute(redisScript, KEYS, Collections.EMPTY_LIST);
         if (stock == -1) {
             emptyStockMap.put(goodsId, true);
@@ -122,22 +129,6 @@ public class SeckillController implements InitializingBean {
         }
         SeckillMessage seckillMessage = new SeckillMessage(user, goodsId);
         mqSender.sendSeckillMessage(JsonUtil.object2JsonStr(seckillMessage));
-        /*
-        GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
-        // 判断库存是否足够
-        if (goodsVo.getStockCount() < 1) {
-            model.addAttribute("errmsg", RespBeanEnum.EMPTY_STOCK.getMessage());
-            return RespBean.error(RespBeanEnum.EMPTY_STOCK);
-        }
-        // 判断同一用户是否对同一商品多次下单
-        // SeckillOrder seckillOrder = seckillOrderService.getOne(new QueryWrapper<SeckillOrder>().eq("user_id", user.getId()).eq("goods_id", goodsId));
-        SeckillOrder seckillOrder = (SeckillOrder) redisTemplate.opsForValue().get("order:" + user.getId() + ":" + goodsId);
-        if (seckillOrder != null) {
-            model.addAttribute("errmsg", RespBeanEnum.REPEAT_ERROR.getMessage());
-            return RespBean.error(RespBeanEnum.REPEAT_ERROR);
-        }
-        Order order = orderService.seckill(user, goodsVo);
-         */
         return RespBean.success(0);
     }
 
@@ -154,7 +145,43 @@ public class SeckillController implements InitializingBean {
         return RespBean.success(orderId);
     }
 
+    /**
+     * 获取真正的秒杀接口路径
+     * @author Ricardo.A.Gu
+     * @since 1.0.0
+     */
+    @RequestMapping(value = "/path", method = RequestMethod.GET)
+    @ResponseBody
+    public RespBean getPath(User user, Long goodsId, String captcha) {
+        if (user == null) return RespBean.error(RespBeanEnum.SESSION_ERROR);
+        boolean check = orderService.checkCaptcha(user, goodsId, captcha);
+        if (!check) return RespBean.error(RespBeanEnum.ERROR_CAPTCHA);
+        String path = orderService.createPath(user, goodsId);
+        return RespBean.success(path);
+    }
 
+    /**
+     * 生成验证码
+     * @author Ricardo.A.Gu
+     * @since 1.0.0
+     */
+    @RequestMapping(value = "/captcha", method = RequestMethod.GET)
+    public void generateCaptcha(User user, Long goodsId, HttpServletResponse response) {
+        if (user == null || goodsId < 0) throw new GlobalException(RespBeanEnum.REQUEST_ILLEGAL);
+        // 设置响应头输出类型为图片
+        response.setContentType("image/jpg");
+        response.setHeader("Pragma", "No-cache");
+        response.setHeader("Cache-control", "No-cache");
+        response.setDateHeader("Expires", 0);
+        // 生成验证码,结果存入redis中
+        ArithmeticCaptcha captcha = new ArithmeticCaptcha(130, 32, 3);
+        redisTemplate.opsForValue().set("captcha:" + user.getId() + ":" + goodsId, captcha.text(), 300, TimeUnit.SECONDS);
+        try {
+            captcha.out(response.getOutputStream());
+        } catch (IOException e) {
+            log.error("验证码生成失败:" + e.getMessage());
+        }
+    }
 
     /**
      * 将库存信息初始化加载到redis中去
@@ -167,7 +194,7 @@ public class SeckillController implements InitializingBean {
         if (CollectionUtils.isEmpty(list)) return;
         list.forEach(goodsVo -> {
             emptyStockMap.put(goodsVo.getId(), false);
-            redisTemplate.opsForValue().set("seckillGoods:"+goodsVo.getId(), goodsVo.getStockCount());
+            redisTemplate.opsForValue().set("seckillGoodsStock:"+goodsVo.getId(), goodsVo.getStockCount());
         });
     }
 }
