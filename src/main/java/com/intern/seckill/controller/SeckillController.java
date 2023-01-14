@@ -1,6 +1,6 @@
 package com.intern.seckill.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.intern.seckill.config.AccessLimit;
 import com.intern.seckill.exception.GlobalException;
 import com.intern.seckill.pojo.SeckillMessage;
 import com.intern.seckill.pojo.SeckillOrder;
@@ -14,20 +14,15 @@ import com.wf.captcha.ArithmeticCaptcha;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import com.intern.seckill.pojo.User;
-import com.intern.seckill.pojo.Order;
 import com.intern.seckill.vo.RespBeanEnum;
 import com.intern.seckill.vo.GoodsVo;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -56,8 +51,6 @@ public class SeckillController implements InitializingBean {
     private RedisTemplate redisTemplate;
     @Autowired
     private RedisScript<Long> redisScript;
-//    @Autowired
-//    private RedisConnection redisConnection;
     @Autowired
     private MQSender mqSender;
 
@@ -152,6 +145,7 @@ public class SeckillController implements InitializingBean {
      */
     @RequestMapping(value = "/path", method = RequestMethod.GET)
     @ResponseBody
+    @AccessLimit(second=5, maxCount=5, needLogin=true)
     public RespBean getPath(User user, Long goodsId, String captcha) {
         if (user == null) return RespBean.error(RespBeanEnum.SESSION_ERROR);
         boolean check = orderService.checkCaptcha(user, goodsId, captcha);
