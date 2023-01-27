@@ -3,6 +3,9 @@ package com.intern.seckill.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.intern.seckill.pojo.SeckillOrder;
 import com.intern.seckill.pojo.User;
+import com.intern.seckill.vo.GoodsVo;
+
+import java.util.List;
 
 /**
  * <p>

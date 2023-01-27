@@ -2,6 +2,7 @@ package com.intern.seckill.controller;
 
 import com.intern.seckill.config.AccessLimit;
 import com.intern.seckill.exception.GlobalException;
+import com.intern.seckill.mapper.SeckillOrderMapper;
 import com.intern.seckill.pojo.SeckillMessage;
 import com.intern.seckill.pojo.SeckillOrder;
 import com.intern.seckill.rabbitmq.MQSender;
@@ -53,6 +54,8 @@ public class SeckillController implements InitializingBean {
     private RedisScript<Long> redisScript;
     @Autowired
     private MQSender mqSender;
+    @Autowired
+    private SeckillOrderMapper seckillOrderMapper;
 
     private Map<Long, Boolean> emptyStockMap = new HashMap<>();
 
@@ -189,6 +192,11 @@ public class SeckillController implements InitializingBean {
         list.forEach(goodsVo -> {
             emptyStockMap.put(goodsVo.getId(), false);
             redisTemplate.opsForValue().set("seckillGoodsStock:"+goodsVo.getId(), goodsVo.getStockCount());
+        });
+        List<SeckillOrder> list1 = seckillOrderMapper.findSeckillOrder();
+        if (CollectionUtils.isEmpty(list1)) return;
+        list1.forEach(seckillOrder -> {
+            redisTemplate.opsForValue().set("order:"+seckillOrder.getUserId()+":"+seckillOrder.getGoodsId(), seckillOrder);
         });
     }
 }

@@ -15,4 +15,15 @@
         id, user_id, order_id, goods_id
     </sql>
 
+    <!-- 获取秒杀订单列表-->
+    <select id="findSeckillOrder" resultType="com.intern.seckill.pojo.SeckillOrder">
+        SELECT
+            so.id,
+            so.user_id,
+            so.order_id,
+            so.goods_id
+        FROM
+            t_seckill_order as so
+    </select>
+
 </mapper>

@@ -17,8 +17,10 @@ import com.intern.seckill.utils.MD5Util;
 import com.intern.seckill.utils.UUIDUtil;
 import com.intern.seckill.vo.GoodsVo;
 import com.intern.seckill.vo.OrderDetailVo;
+import com.intern.seckill.vo.RespBean;
 import com.intern.seckill.vo.RespBeanEnum;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
@@ -85,8 +87,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         seckillOrder.setUserId(user.getId());
         seckillOrder.setOrderId(order.getId());
         seckillOrder.setGoodsId(goodsVo.getId());
-        seckillOrderService.save(seckillOrder);
         redisTemplate.opsForValue().set("order:"+user.getId()+":"+goodsVo.getId(), seckillOrder);
+        try {
+            seckillOrderService.save(seckillOrder);
+        } catch (DuplicateKeyException dke) {
+            throw new GlobalException(RespBeanEnum.REPEAT_ERROR);
+        }
         return order;
     }
 
